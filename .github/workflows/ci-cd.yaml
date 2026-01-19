@@ -1,0 +1,51 @@
+name: Node CI/CD with JFrog and Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_NAME: node-demo
+  IMAGE_TAG: ${{ github.sha }}
+  JFROG_REGISTRY: trialgm71cs.jfrog.io
+  JFROG_REPO: bktest-localdocker
+  NAMESPACE: jfrog-demo
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Build Docker image
+        run: |
+          docker build -t $JFROG_REGISTRY/$JFROG_REPO/$IMAGE_NAME:$IMAGE_TAG .
+
+      - name: Login to JFrog Docker registry
+        run: |
+          echo "${{ secrets.JFROG_API_KEY }}" | docker login $JFROG_REGISTRY \
+            -u "${{ secrets.JFROG_USERNAME }}" --password-stdin
+
+      - name: Push image to JFrog
+        run: |
+          docker push $JFROG_REGISTRY/$JFROG_REPO/$IMAGE_NAME:$IMAGE_TAG
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.29.0
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/node-demo \
+            node-demo=$JFROG_REGISTRY/$JFROG_REPO/$IMAGE_NAME:$IMAGE_TAG \
+            -n $NAMESPACE
+
