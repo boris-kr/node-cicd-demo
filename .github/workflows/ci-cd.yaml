@@ -7,7 +7,7 @@ on:
 
 env:
   IMAGE_NAME: node-demo
-  IMAGE_TAG: ${{ github.sha }}
+  IMAGE_TAG: latest
   JFROG_REGISTRY: trialgm71cs.jfrog.io
   JFROG_REPO: bktest-localdocker
   NAMESPACE: jfrog-demo
