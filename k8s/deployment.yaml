@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-demo
+  namespace: jfrog-demo
+  labels:
+    app: node-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-demo
+  template:
+    metadata:
+      labels:
+        app: node-demo
+    spec:
+      containers:
+        - name: node-demo
+          image: trialgm71cs.jfrog.io/bktest-localdocker/node-demo:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4000
+          env:
+            - name: APP_VERSION
+              value: "local"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 20
